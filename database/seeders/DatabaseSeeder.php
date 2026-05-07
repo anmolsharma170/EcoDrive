@@ -48,115 +48,34 @@ class DatabaseSeeder extends Seeder
             EcoTip::firstOrCreate(['title' => $tip['title']], $tip);
         }
 
-        // ─── Demo Users ─────────────────────────────────────────────────
-        $users = [
-            ['name' => 'Arjun Sharma',    'email' => 'arjun@example.com',  'eco_score' => 920, 'co2_saved_this_month' => 68.5, 'trips_logged' => 24],
-            ['name' => 'Priya Nair',      'email' => 'priya@example.com',  'eco_score' => 870, 'co2_saved_this_month' => 52.0, 'trips_logged' => 18],
-            ['name' => 'Rahul Mehta',     'email' => 'rahul@example.com',  'eco_score' => 810, 'co2_saved_this_month' => 44.3, 'trips_logged' => 15],
-            ['name' => 'Deepa Iyer',      'email' => 'deepa@example.com',  'eco_score' => 755, 'co2_saved_this_month' => 39.0, 'trips_logged' => 12],
-            ['name' => 'Vikram Singh',    'email' => 'vikram@example.com', 'eco_score' => 690, 'co2_saved_this_month' => 31.5, 'trips_logged' => 10],
-            ['name' => 'Ananya Reddy',    'email' => 'ananya@example.com', 'eco_score' => 620, 'co2_saved_this_month' => 27.0, 'trips_logged' => 9],
-            ['name' => 'Kiran Bose',      'email' => 'kiran@example.com',  'eco_score' => 540, 'co2_saved_this_month' => 22.1, 'trips_logged' => 7],
-            ['name' => 'Sneha Gupta',     'email' => 'sneha@example.com',  'eco_score' => 470, 'co2_saved_this_month' => 18.5, 'trips_logged' => 6],
-        ];
+        // ─── Users, Vehicles, Trips ──────────────────────────────────────
+        // Create a main user for easy login
+        $mainUser = User::factory()->create([
+            'name' => 'Alex Green',
+            'email' => 'alex@ecodrive.com',
+            'password' => Hash::make('password'),
+            'co2_saved_this_month' => 25.5,
+            'points' => 1250,
+        ]);
 
-        $createdUsers = [];
-        foreach ($users as $userData) {
-            $u = User::firstOrCreate(
-                ['email' => $userData['email']],
-                array_merge($userData, ['password' => Hash::make('password')])
-            );
-            $createdUsers[] = $u;
-        }
+        // Create 20 other random users
+        User::factory(20)->create();
 
-        // Primary test user
-        $testUser = User::firstOrCreate(
-            ['email' => 'test@example.com'],
-            [
-                'name'                 => 'Eco Driver India',
-                'email'                => 'test@example.com',
-                'password'             => Hash::make('password'),
-                'eco_score'            => 850,
-                'co2_saved_this_month' => 45.5,
-                'trips_logged'         => 12,
-            ]
-        );
-        $createdUsers[] = $testUser;
+        // Create vehicles and trips for all users
+        User::all()->each(function ($user) {
+            // Give each user 1-2 vehicles
+            Vehicle::factory(rand(1, 2))->create(['user_id' => $user->id]);
 
-        // ─── Streaks for all users ───────────────────────────────────────
-        $streakDays = [14, 9, 5, 7, 3, 12, 1, 4, 6];
-        foreach ($createdUsers as $i => $u) {
-            UserStreak::firstOrCreate(
-                ['user_id' => $u->id],
-                [
-                    'current_streak'     => $streakDays[$i] ?? rand(1, 10),
-                    'longest_streak'     => ($streakDays[$i] ?? 5) + rand(1, 5),
-                    'last_activity_date' => now()->toDateString(),
-                ]
-            );
-        }
-
-        // ─── Vehicles for test user ──────────────────────────────────────
-        $vehicleData = [
-            [
-                'make' => 'Tata', 'model' => 'Nexon EV', 'year' => 2023,
-                'fuel_type' => 'electric', 'engine_cc' => null,
-                'co2_per_km' => 0.0, 'emission_rating' => 'A++', 'is_primary' => true,
-            ],
-            [
-                'make' => 'Honda', 'model' => 'City', 'year' => 2021,
-                'fuel_type' => 'petrol', 'engine_cc' => 1498,
-                'co2_per_km' => 118.0, 'emission_rating' => 'B', 'is_primary' => false,
-            ],
-        ];
-        foreach ($vehicleData as $vd) {
-            Vehicle::firstOrCreate(
-                ['user_id' => $testUser->id, 'make' => $vd['make'], 'model' => $vd['model']],
-                array_merge($vd, ['user_id' => $testUser->id])
-            );
-        }
-
-        // ─── Trips for all users ─────────────────────────────────────────
-        $fuelTypes = ['petrol', 'diesel', 'electric', 'hybrid', 'cng'];
-        $emissionFactors = ['petrol' => 0.21, 'diesel' => 0.27, 'electric' => 0.05, 'hybrid' => 0.10, 'cng' => 0.18];
-        $vehicleTypes = ['Sedan', 'SUV', 'Hatchback', 'Van', 'Truck'];
-
-        foreach ($createdUsers as $u) {
-            $tripCount = $u->trips_logged ?? 10;
-            for ($i = 0; $i < $tripCount; $i++) {
-                $fuel = $fuelTypes[array_rand($fuelTypes)];
-                $dist = rand(5, 80);
-                $co2 = round($dist * $emissionFactors[$fuel], 2);
-                Trip::firstOrCreate(
-                    ['user_id' => $u->id, 'date' => now()->subDays($i % 30)->format('Y-m-d'), 'distance_km' => $dist],
-                    [
-                        'co2_emitted_kg' => $co2,
-                        'fuel_type'      => $fuel,
-                        'vehicle_type'   => $vehicleTypes[array_rand($vehicleTypes)],
-                        'vehicle_id'     => null,
-                    ]
-                );
+            // Give each user 5-50 trips
+            if ($user->vehicles->count() > 0) {
+                Trip::factory(rand(5, 50))->create([
+                    'user_id' => $user->id,
+                    'vehicle_id' => $user->vehicles->random()->id,
+                ]);
             }
-        }
 
-        // ─── Achievements for test user ──────────────────────────────────
-        $firstTrip = Achievement::where('slug', 'first-trip')->first();
-        $tenTrips  = Achievement::where('slug', '10-trips')->first();
-        $ecoChamp  = Achievement::where('slug', 'eco-grade-a')->first();
-        if ($firstTrip) {
-            $testUser->achievements()->syncWithoutDetaching([
-                $firstTrip->id => ['unlocked_at' => now()->subDays(10)],
-            ]);
-        }
-        if ($tenTrips) {
-            $testUser->achievements()->syncWithoutDetaching([
-                $tenTrips->id => ['unlocked_at' => now()->subDays(5)],
-            ]);
-        }
-        if ($ecoChamp) {
-            $testUser->achievements()->syncWithoutDetaching([
-                $ecoChamp->id => ['unlocked_at' => now()->subDays(2)],
-            ]);
-        }
+            // Create a streak for the user
+            UserStreak::factory()->create(['user_id' => $user->id]);
+        });
     }
 }
