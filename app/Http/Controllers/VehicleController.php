@@ -4,13 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Models\Vehicle;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 
 class VehicleController extends Controller
 {
     public function index()
     {
-        $vehicles = Auth::user()->vehicles()->latest()->get();
+        $vehicles = Vehicle::where('user_id', auth()->id())->get();
         return view('vehicles.index', compact('vehicles'));
     }
 
@@ -22,52 +21,29 @@ class VehicleController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'vehicle_name' => 'required|string|max:100',
-            'vehicle_type' => 'required|in:car,bike,truck',
-            'fuel_type'    => 'required|in:petrol,diesel,electric,hybrid',
+            'make'            => 'required|string|max:100',
+            'model'           => 'required|string|max:100',
+            'year'            => 'required|integer|min:1990|max:' . (date('Y') + 1),
+            'fuel_type'       => 'required|in:petrol,diesel,electric,hybrid,cng',
+            'engine_cc'       => 'nullable|numeric|min:0',
+            'co2_per_km'      => 'required|numeric|min:0|max:999',
+            'emission_rating' => 'required|in:A++,A+,A,B,C,D,E,F',
+            'is_primary'      => 'boolean',
         ]);
 
-        Auth::user()->vehicles()->create($validated);
+        if ($request->boolean('is_primary')) {
+            Vehicle::where('user_id', auth()->id())->update(['is_primary' => false]);
+        }
 
-        return redirect()->route('vehicles.index')
-            ->with('success', 'Vehicle added successfully!');
-    }
+        Vehicle::create(array_merge($validated, ['user_id' => auth()->id()]));
 
-    public function edit(Vehicle $vehicle)
-    {
-        $this->authorizeVehicle($vehicle);
-        return view('vehicles.edit', compact('vehicle'));
-    }
-
-    public function update(Request $request, Vehicle $vehicle)
-    {
-        $this->authorizeVehicle($vehicle);
-
-        $validated = $request->validate([
-            'vehicle_name' => 'required|string|max:100',
-            'vehicle_type' => 'required|in:car,bike,truck',
-            'fuel_type'    => 'required|in:petrol,diesel,electric,hybrid',
-        ]);
-
-        $vehicle->update($validated);
-
-        return redirect()->route('vehicles.index')
-            ->with('success', 'Vehicle updated successfully!');
+        return redirect()->route('vehicles.index')->with('success', 'Vehicle added successfully!');
     }
 
     public function destroy(Vehicle $vehicle)
     {
-        $this->authorizeVehicle($vehicle);
+        if ($vehicle->user_id !== auth()->id()) abort(403);
         $vehicle->delete();
-
-        return redirect()->route('vehicles.index')
-            ->with('success', 'Vehicle deleted.');
-    }
-
-    private function authorizeVehicle(Vehicle $vehicle): void
-    {
-        if ($vehicle->user_id !== Auth::id()) {
-            abort(403);
-        }
+        return back()->with('success', 'Vehicle removed.');
     }
 }

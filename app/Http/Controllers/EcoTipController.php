@@ -3,25 +3,23 @@
 namespace App\Http\Controllers;
 
 use App\Models\EcoTip;
+use Illuminate\Http\Request;
 
 class EcoTipController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $tips = EcoTip::where('is_active', true)
-            ->orderBy('category')
-            ->get()
-            ->groupBy('category');
+        $category = $request->get('category', 'all');
 
-        return view('tips.index', compact('tips'));
-    }
-
-    public function show(EcoTip $ecoTip)
-    {
-        if (!$ecoTip->is_active) {
-            abort(404);
+        $query = EcoTip::query();
+        if ($category !== 'all') {
+            $query->where('category', $category);
         }
 
-        return view('tips.show', ['tip' => $ecoTip]);
+        $tips = $query->get();
+        $tipOfDay = EcoTip::inRandomOrder()->first();
+        $categories = EcoTip::distinct()->pluck('category');
+
+        return view('eco-tips.index', compact('tips', 'tipOfDay', 'category', 'categories'));
     }
 }

@@ -6,20 +6,26 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
+    /**
+     * Run the migrations.
+     */
     public function up(): void
     {
-        Schema::create('vehicles', function (Blueprint $table) {
+        Schema::create('trips', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->string('vehicle_name');
-            $table->enum('vehicle_type', ['car', 'bike', 'truck']);
-            $table->enum('fuel_type', ['petrol', 'diesel', 'electric', 'hybrid']);
+            $table->decimal('distance_km', 8, 2);
+            $table->decimal('co2_emitted_kg', 8, 2);
+            $table->date('date');
             $table->timestamps();
         });
     }
 
+    /**
+     * Reverse the migrations.
+     */
     public function down(): void
     {
-        Schema::dropIfExists('vehicles');
+        Schema::dropIfExists('trips');
     }
 };

@@ -10,16 +10,17 @@ class Trip extends Model
         'user_id',
         'vehicle_id',
         'distance_km',
-        'fuel_consumed',
-        'carbon_emission',
-        'eco_points_earned',
-        'trip_date',
+        'co2_emitted_kg',
+        'date',
+        'vehicle_type',
+        'fuel_type',
+        'notes',
     ];
 
     protected $casts = [
-        'trip_date'        => 'date',
-        'carbon_emission'  => 'decimal:4',
-        'eco_points_earned'=> 'decimal:4',
+        'date' => 'date',
+        'distance_km' => 'decimal:2',
+        'co2_emitted_kg' => 'decimal:2',
     ];
 
     public function user()
@@ -30,5 +31,19 @@ class Trip extends Model
     public function vehicle()
     {
         return $this->belongsTo(Vehicle::class);
+    }
+
+    // Emission badge color: green < 2kg, yellow < 5kg, red >= 5kg
+    public function getEmissionBadgeAttribute(): string
+    {
+        if ($this->co2_emitted_kg < 2) return 'green';
+        if ($this->co2_emitted_kg < 5) return 'yellow';
+        return 'red';
+    }
+
+    // CO2 in coal equivalent kg (1 kg coal ≈ 2.42 kg CO2)
+    public function getCoalEquivalentAttribute(): float
+    {
+        return round($this->co2_emitted_kg / 2.42, 2);
     }
 }

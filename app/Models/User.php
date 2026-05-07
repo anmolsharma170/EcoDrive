@@ -16,8 +16,9 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
-        'role',
         'eco_score',
+        'co2_saved_this_month',
+        'trips_logged',
     ];
 
     protected $hidden = [
@@ -29,14 +30,14 @@ class User extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
-            'password'          => 'hashed',
-            'eco_score'         => 'decimal:2',
+            'password' => 'hashed',
         ];
     }
 
-    public function isAdmin(): bool
+    // Relationships
+    public function trips()
     {
-        return $this->role === 'admin';
+        return $this->hasMany(Trip::class);
     }
 
     public function vehicles()
@@ -44,13 +45,39 @@ class User extends Authenticatable
         return $this->hasMany(Vehicle::class);
     }
 
-    public function trips()
+    public function streak()
     {
-        return $this->hasMany(Trip::class);
+        return $this->hasOne(UserStreak::class);
     }
 
-    public function leaderboard()
+    public function achievements()
     {
-        return $this->hasOne(Leaderboard::class);
+        return $this->belongsToMany(Achievement::class, 'user_achievements')
+            ->withPivot('unlocked_at')
+            ->withTimestamps();
+    }
+
+    // Computed: Eco Grade (A/B/C/D/F)
+    public function getEcoGradeAttribute(): string
+    {
+        $score = $this->eco_score ?? 0;
+        if ($score >= 900) return 'A+';
+        if ($score >= 750) return 'A';
+        if ($score >= 600) return 'B';
+        if ($score >= 400) return 'C';
+        if ($score >= 200) return 'D';
+        return 'F';
+    }
+
+    // Computed: Trees saved (1 tree absorbs ~21kg CO2/year = 1.75kg/month)
+    public function getTreesSavedAttribute(): float
+    {
+        return round(($this->co2_saved_this_month ?? 0) / 1.75, 1);
+    }
+
+    // Current streak days
+    public function getCurrentStreakAttribute(): int
+    {
+        return $this->streak?->current_streak ?? 0;
     }
 }

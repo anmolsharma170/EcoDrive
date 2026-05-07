@@ -1,256 +1,167 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="dark">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <meta name="description" content="Eco Drive — Track, reduce, and offset your carbon footprint while driving. Compete with others to drive greener.">
     <title>{{ config('app.name', 'Eco Drive') }} — @yield('title', 'Dashboard')</title>
 
-    <!-- Bootstrap 5 -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Bootstrap Icons -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Scripts & Styles -->
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
 
     <style>
-        :root {
-            --eco-green:     #22c55e;
-            --eco-dark:      #15803d;
-            --eco-light:     #dcfce7;
-            --eco-sidebar:   #0f172a;
-            --eco-card:      #1e293b;
-            --eco-text:      #f8fafc;
-            --eco-muted:     #94a3b8;
-        }
-        * { font-family: 'Inter', sans-serif; }
-        body { background: #0f172a; color: var(--eco-text); min-height: 100vh; display: flex; flex-direction: column; }
-
-        /* Sidebar */
-        .sidebar {
-            width: 260px; min-height: 100vh;
-            background: var(--eco-card);
-            border-right: 1px solid rgba(255,255,255,.05);
-            position: fixed; top: 0; left: 0; z-index: 100;
-            display: flex; flex-direction: column;
-            transition: transform .3s;
-        }
-        .sidebar-brand {
-            padding: 1.5rem;
-            border-bottom: 1px solid rgba(255,255,255,.05);
-        }
-        .brand-logo { font-size: 1.4rem; font-weight: 700; color: var(--eco-green); }
-        .brand-logo i { margin-right: .4rem; }
-        .sidebar-nav { padding: 1rem 0; flex: 1; }
-        .nav-section { padding: .5rem 1.2rem; font-size: .7rem; color: var(--eco-muted); text-transform: uppercase; letter-spacing: .1em; font-weight: 600; }
-        .nav-link-item {
-            display: flex; align-items: center; gap: .75rem;
-            padding: .65rem 1.4rem; color: var(--eco-muted);
-            text-decoration: none; font-size: .9rem; font-weight: 500;
-            border-radius: 8px; margin: .1rem .8rem;
-            transition: all .2s;
-        }
-        .nav-link-item:hover, .nav-link-item.active {
-            background: rgba(34,197,94,.12);
-            color: var(--eco-green);
-        }
-        .nav-link-item i { font-size: 1rem; width: 20px; text-align: center; }
-
-        /* Main content */
-        .main-content { margin-left: 260px; flex: 1; padding: 2rem; }
-
-        /* Top bar */
-        .top-bar {
-            background: var(--eco-card); border-bottom: 1px solid rgba(255,255,255,.05);
-            padding: .9rem 2rem; margin: -2rem -2rem 2rem;
-            display: flex; align-items: center; justify-content: space-between;
-        }
-        .top-bar-title { font-size: 1.1rem; font-weight: 600; }
-        .user-pill {
-            display: flex; align-items: center; gap: .6rem;
-            background: rgba(255,255,255,.05); border-radius: 50px;
-            padding: .4rem 1rem; font-size: .85rem;
-        }
-        .user-avatar {
-            width: 30px; height: 30px; border-radius: 50%;
-            background: var(--eco-dark);
-            display: flex; align-items: center; justify-content: center;
-            font-size: .8rem; font-weight: 600; color: var(--eco-green);
-        }
-
-        /* Cards */
-        .eco-card {
-            background: var(--eco-card); border-radius: 16px;
-            border: 1px solid rgba(255,255,255,.06);
-            padding: 1.5rem; transition: transform .2s, box-shadow .2s;
-        }
-        .eco-card:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(0,0,0,.3); }
-        .stat-card-icon {
-            width: 50px; height: 50px; border-radius: 12px;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 1.4rem;
-        }
-        .stat-value { font-size: 2rem; font-weight: 700; }
-        .stat-label { color: var(--eco-muted); font-size: .85rem; }
-
-        /* Badges */
-        .badge-green  { background: rgba(34,197,94,.15);  color: var(--eco-green); border-radius: 50px; padding: .3rem .8rem; font-size: .78rem; font-weight: 600; }
-        .badge-yellow { background: rgba(234,179,8,.15);  color: #eab308; border-radius: 50px; padding: .3rem .8rem; font-size: .78rem; font-weight: 600; }
-        .badge-blue   { background: rgba(59,130,246,.15); color: #60a5fa; border-radius: 50px; padding: .3rem .8rem; font-size: .78rem; font-weight: 600; }
-        .badge-red    { background: rgba(239,68,68,.15);  color: #f87171; border-radius: 50px; padding: .3rem .8rem; font-size: .78rem; font-weight: 600; }
-
-        /* Tables */
-        .eco-table { width: 100%; border-collapse: separate; border-spacing: 0; }
-        .eco-table th { color: var(--eco-muted); font-size: .78rem; text-transform: uppercase; letter-spacing: .06em; padding: .75rem 1rem; font-weight: 600; }
-        .eco-table td { padding: .9rem 1rem; border-bottom: 1px solid rgba(255,255,255,.04); font-size: .9rem; }
-        .eco-table tbody tr:hover { background: rgba(255,255,255,.03); }
-
-        /* Forms */
-        .form-control, .form-select {
-            background: rgba(255,255,255,.05) !important;
-            border: 1px solid rgba(255,255,255,.1) !important;
-            color: var(--eco-text) !important;
-            border-radius: 10px;
-        }
-        .form-control:focus, .form-select:focus {
-            box-shadow: 0 0 0 3px rgba(34,197,94,.2) !important;
-            border-color: var(--eco-green) !important;
-        }
-        .form-label { color: var(--eco-muted); font-size: .85rem; font-weight: 500; margin-bottom: .4rem; }
-        .btn-eco {
-            background: var(--eco-green); color: #000; font-weight: 600;
-            border: none; border-radius: 10px; padding: .65rem 1.5rem;
-            transition: background .2s, transform .1s;
-        }
-        .btn-eco:hover { background: var(--eco-dark); color: #fff; transform: translateY(-1px); }
-        .btn-danger-eco { background: rgba(239,68,68,.15); color: #f87171; border: 1px solid rgba(239,68,68,.2); border-radius: 8px; font-size: .8rem; padding: .3rem .7rem; }
-        .btn-danger-eco:hover { background: rgba(239,68,68,.3); color: #fff; }
-
-        /* Alert */
-        .alert-eco { background: rgba(34,197,94,.1); border: 1px solid rgba(34,197,94,.3); color: var(--eco-green); border-radius: 12px; }
-        .alert-danger-eco { background: rgba(239,68,68,.1); border: 1px solid rgba(239,68,68,.3); color: #f87171; border-radius: 12px; }
-        .alert-warning-eco { background: rgba(234,179,8,.1); border: 1px solid rgba(234,179,8,.3); color: #fbbf24; border-radius: 12px; }
-
-        /* Mobile */
-        @media (max-width: 768px) {
-            .sidebar { transform: translateX(-100%); }
-            .main-content { margin-left: 0; padding: 1rem; }
-            .top-bar { margin: -1rem -1rem 1rem; }
-        }
-
-        /* Leaderboard */
-        .rank-badge {
-            width: 36px; height: 36px; border-radius: 50%;
-            display: inline-flex; align-items: center; justify-content: center;
-            font-weight: 700; font-size: .9rem;
-        }
-        .rank-1 { background: linear-gradient(135deg, #fbbf24, #f59e0b); color: #000; }
-        .rank-2 { background: linear-gradient(135deg, #9ca3af, #6b7280); color: #fff; }
-        .rank-3 { background: linear-gradient(135deg, #b45309, #92400e); color: #fff; }
-        .rank-other { background: rgba(255,255,255,.1); color: var(--eco-muted); }
-
-        /* Page header */
-        .page-header { margin-bottom: 2rem; }
-        .page-header h1 { font-size: 1.6rem; font-weight: 700; margin-bottom: .3rem; }
-        .page-header p  { color: var(--eco-muted); margin: 0; font-size: .9rem; }
-
-        /* Tip card */
-        .tip-card { border-left: 3px solid var(--eco-green); }
-        .tip-icon { font-size: 2rem; }
-
-        /* Progress ring */
-        .eco-score-ring { position: relative; display: inline-flex; align-items: center; justify-content: center; }
+        body { background-color: #0A0F1E; }
     </style>
-    @stack('styles')
 </head>
-<body>
-    <!-- Sidebar -->
-    <aside class="sidebar">
-        <div class="sidebar-brand">
-            <div class="brand-logo"><i class="bi bi-leaf-fill"></i>Eco Drive</div>
-            <div style="font-size:.75rem; color: var(--eco-muted); margin-top:.25rem;">Sustainable Driving Platform</div>
-        </div>
-        <nav class="sidebar-nav">
-            <div class="nav-section">Main</div>
-            <a href="{{ route('dashboard') }}" class="nav-link-item {{ request()->routeIs('dashboard') ? 'active' : '' }}">
-                <i class="bi bi-speedometer2"></i> Dashboard
-            </a>
-            <a href="{{ route('trips.index') }}" class="nav-link-item {{ request()->routeIs('trips.*') ? 'active' : '' }}">
-                <i class="bi bi-map"></i> Trip Logger
-            </a>
-            <a href="{{ route('vehicles.index') }}" class="nav-link-item {{ request()->routeIs('vehicles.*') ? 'active' : '' }}">
-                <i class="bi bi-car-front"></i> My Vehicles
-            </a>
+<body class="font-sans antialiased bg-[#0A0F1E] text-slate-200 min-h-screen">
 
-            <div class="nav-section mt-2">Eco</div>
-            <a href="{{ route('leaderboard.index') }}" class="nav-link-item {{ request()->routeIs('leaderboard.*') ? 'active' : '' }}">
-                <i class="bi bi-trophy"></i> Leaderboard
-            </a>
-            <a href="{{ route('tips.index') }}" class="nav-link-item {{ request()->routeIs('tips.*') ? 'active' : '' }}">
-                <i class="bi bi-lightbulb"></i> Eco Tips
-            </a>
+    <div class="flex h-screen overflow-hidden">
 
-            @if(Auth::user()->isAdmin())
-            <div class="nav-section mt-2">Admin</div>
-            <a href="{{ route('admin.dashboard') }}" class="nav-link-item {{ request()->routeIs('admin.*') ? 'active' : '' }}">
-                <i class="bi bi-shield-check"></i> Admin Panel
-            </a>
-            @endif
+        <!-- ── Sidebar Navigation ─────────────────────────────── -->
+        <aside id="sidebar"
+               class="fixed inset-y-0 left-0 z-50 w-64 flex flex-col border-r border-white/5 transform transition-transform duration-300 lg:relative lg:translate-x-0"
+               style="background: #080C17;">
 
-            <div class="nav-section mt-2">Account</div>
-            <a href="{{ route('profile.edit') }}" class="nav-link-item">
-                <i class="bi bi-person-circle"></i> Profile
-            </a>
-            <form method="POST" action="{{ route('logout') }}">
-                @csrf
-                <button type="submit" class="nav-link-item w-100 border-0 bg-transparent text-start" style="cursor:pointer;">
-                    <i class="bi bi-box-arrow-left"></i> Logout
-                </button>
-            </form>
-        </nav>
-
-        <!-- User info at bottom -->
-        <div style="padding:1rem 1.4rem; border-top:1px solid rgba(255,255,255,.05);">
-            <div class="user-pill">
-                <div class="user-avatar">{{ strtoupper(substr(Auth::user()->name, 0, 1)) }}</div>
+            <!-- Logo -->
+            <div class="flex items-center gap-3 px-6 py-6 border-b border-white/5">
+                <div class="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style="background: linear-gradient(135deg,#00FF87,#00C9A7);">
+                    <svg class="w-5 h-5 text-[#0A0F1E]" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2a10 10 0 100 20A10 10 0 0012 2zm0 3a7 7 0 110 14A7 7 0 0112 5zm-1 3v5l4 2.5-.75-1.3L13 13V8h-2z"/></svg>
+                </div>
                 <div>
-                    <div style="font-size:.82rem; font-weight:600;">{{ Auth::user()->name }}</div>
-                    <div style="font-size:.72rem; color:var(--eco-muted);">{{ ucfirst(Auth::user()->role) }}</div>
+                    <span class="font-black text-lg text-white tracking-tight">Eco<span style="color:#00FF87">Drive</span></span>
+                    <p class="text-xs text-slate-500 font-medium">Carbon Tracker</p>
                 </div>
             </div>
-        </div>
-    </aside>
 
-    <!-- Main Content -->
-    <main class="main-content">
-        <div class="top-bar">
-            <div class="top-bar-title">@yield('title', 'Dashboard')</div>
-            <div style="display:flex;align-items:center;gap:1rem;">
-                <span style="color:var(--eco-muted); font-size:.82rem;">
-                    <i class="bi bi-star-fill" style="color:#fbbf24;"></i>
-                    {{ number_format(Auth::user()->eco_score, 0) }} pts
-                </span>
-                <a href="{{ route('trips.create') }}" class="btn-eco btn" style="font-size:.82rem; padding:.4rem 1rem;">
-                    <i class="bi bi-plus-lg"></i> Log Trip
+            <!-- Nav Links -->
+            <nav class="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+                <a href="{{ route('dashboard') }}"
+                   class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">
+                    <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+                    Dashboard
                 </a>
+
+                <a href="{{ route('trips.create') }}"
+                   class="nav-link {{ request()->routeIs('trips.create') ? 'active' : '' }}">
+                    <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                    Log a Trip
+                </a>
+
+                <a href="{{ route('trips.index') }}"
+                   class="nav-link {{ request()->routeIs('trips.index') ? 'active' : '' }}">
+                    <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                    My Trips
+                </a>
+
+                <a href="{{ route('leaderboard.index') }}"
+                   class="nav-link {{ request()->routeIs('leaderboard.*') ? 'active' : '' }}">
+                    <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                    Leaderboard
+                </a>
+
+                <a href="{{ route('insights.index') }}"
+                   class="nav-link {{ request()->routeIs('insights.*') ? 'active' : '' }}">
+                    <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    Global Insights
+                </a>
+
+                <a href="{{ route('eco-tips.index') }}"
+                   class="nav-link {{ request()->routeIs('eco-tips.*') ? 'active' : '' }}">
+                    <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+                    Eco Tips
+                </a>
+
+                <a href="{{ route('vehicles.index') }}"
+                   class="nav-link {{ request()->routeIs('vehicles.*') ? 'active' : '' }}">
+                    <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg>
+                    My Vehicles
+                </a>
+
+                <div class="pt-4 mt-4 border-t border-white/5">
+                    <a href="{{ route('profile.edit') }}"
+                       class="nav-link {{ request()->routeIs('profile.*') ? 'active' : '' }}">
+                        <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                        Profile
+                    </a>
+                </div>
+            </nav>
+
+            <!-- User Info at Bottom -->
+            <div class="p-4 border-t border-white/5">
+                <div class="flex items-center gap-3 p-3 rounded-xl" style="background: rgba(0,255,135,0.05); border: 1px solid rgba(0,255,135,0.1);">
+                    <div class="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold text-[#0A0F1E] flex-shrink-0"
+                         style="background: linear-gradient(135deg,#00FF87,#00C9A7);">
+                        {{ strtoupper(substr(auth()->user()->name, 0, 2)) }}
+                    </div>
+                    <div class="overflow-hidden">
+                        <p class="text-sm font-semibold text-white truncate">{{ auth()->user()->name }}</p>
+                        <p class="text-xs text-slate-500">{{ auth()->user()->eco_grade }} Grade</p>
+                    </div>
+                    <form method="POST" action="{{ route('logout') }}" class="ml-auto">
+                        @csrf
+                        <button type="submit" class="text-slate-500 hover:text-red-400 transition-colors" title="Logout">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+                        </button>
+                    </form>
+                </div>
             </div>
+        </aside>
+
+        <!-- ── Main Content ────────────────────────────────────── -->
+        <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
+
+            <!-- Top Bar -->
+            <header class="flex items-center justify-between px-6 py-4 border-b border-white/5 lg:hidden" style="background: #080C17;">
+                <span class="font-black text-lg text-white">Eco<span style="color:#00FF87">Drive</span></span>
+                <button id="sidebar-toggle" onclick="toggleSidebar()" class="text-slate-400 hover:text-white">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+                </button>
+            </header>
+
+            <!-- Flash Messages -->
+            @if(session('success'))
+            <div class="mx-6 mt-4 p-4 rounded-xl flex items-center gap-3 text-sm font-medium animate-slide-up"
+                 style="background: rgba(0,255,135,0.1); border: 1px solid rgba(0,255,135,0.3); color: #00FF87;">
+                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                {{ session('success') }}
+            </div>
+            @endif
+
+            @if(session('error'))
+            <div class="mx-6 mt-4 p-4 rounded-xl flex items-center gap-3 text-sm font-medium"
+                 style="background: rgba(244,67,54,0.1); border: 1px solid rgba(244,67,54,0.3); color: #FF5722;">
+                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                {{ session('error') }}
+            </div>
+            @endif
+
+            <!-- Page Content -->
+            <main class="flex-1 overflow-y-auto p-6">
+                {{ $slot }}
+            </main>
         </div>
+    </div>
 
-        @if(session('success'))
-        <div class="alert alert-eco mb-3"><i class="bi bi-check-circle-fill me-2"></i>{{ session('success') }}</div>
-        @endif
-        @if(session('error'))
-        <div class="alert alert-danger-eco mb-3"><i class="bi bi-x-circle-fill me-2"></i>{{ session('error') }}</div>
-        @endif
-        @if(session('warning'))
-        <div class="alert alert-warning-eco mb-3"><i class="bi bi-exclamation-triangle-fill me-2"></i>{{ session('warning') }}</div>
-        @endif
+    <!-- Overlay for mobile sidebar -->
+    <div id="sidebar-overlay" class="fixed inset-0 bg-black/60 z-40 hidden lg:hidden" onclick="toggleSidebar()"></div>
 
-        @yield('content')
-    </main>
-
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    @stack('scripts')
+    <script>
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebar-overlay');
+            sidebar.classList.toggle('-translate-x-full');
+            overlay.classList.toggle('hidden');
+        }
+        // Hide sidebar on mobile by default
+        if (window.innerWidth < 1024) {
+            document.getElementById('sidebar').classList.add('-translate-x-full');
+        }
+    </script>
 </body>
 </html>

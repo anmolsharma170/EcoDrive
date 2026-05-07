@@ -6,9 +6,15 @@ use Illuminate\Database\Eloquent\Model;
 
 class EcoTip extends Model
 {
-    protected $fillable = ['title', 'description', 'category', 'image_url', 'is_active'];
+    protected $fillable = [
+        'title',
+        'description',
+        'estimated_co2_savings_kg',
+        'category',
+        'icon',
+    ];
 
     protected $casts = [
-        'is_active' => 'boolean',
+        'estimated_co2_savings_kg' => 'decimal:1',
     ];
 }
