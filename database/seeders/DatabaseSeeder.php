@@ -55,7 +55,7 @@ class DatabaseSeeder extends Seeder
             'email' => 'alex@ecodrive.com',
             'password' => Hash::make('password'),
             'co2_saved_this_month' => 25.5,
-            'points' => 1250,
+            'eco_score' => 1250,
         ]);
 
         // Create 20 other random users
