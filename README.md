@@ -89,15 +89,44 @@ The Carbon Footprint Tracker is an environmental awareness application built wit
 - CSRF protection
 - User authentication checks
 
-## Technology Stack
+## Technology Stack & Workflow
 
-- **Framework**: Laravel 11
-- **Frontend**: Blade Templates
-- **Styling**: Tailwind CSS
-- **Build Tool**: Vite
-- **Database**: PostgreSQL/MySQL
-- **Authentication**: Laravel Breeze
-- **ORM**: Eloquent
+### 1. High-Level Overview (For Everyone)
+
+**How it all works together (The Workflow):**
+When you visit the Carbon Footprint Tracker, your web browser talks to our server. We use a powerful framework called **Laravel**, which acts as the "brain" of our application. It receives your requests (like "log my new trip" or "show me my current eco-score"), securely interacts with the database to fetch or save this information, and then sends back a beautifully styled webpage.
+
+Our web pages are built using **Blade Templates** (which dynamically insert your specific data into the web page) and are styled with **Tailwind CSS**, making everything look modern and responsive whether you're on a laptop or a mobile phone. 
+
+**Main Tools Used:**
+- **Laravel (PHP)**: The main engine running the app, securely handling logic, user accounts, and data routing.
+- **MySQL / PostgreSQL**: The digital filing cabinet (database) where all user data, tracked trips, and vehicle information are securely stored.
+- **Tailwind CSS**: The design toolkit we use to make the application look clean, consistent, and beautiful without writing thousands of lines of custom style code.
+- **Vite**: A super-fast background tool that optimizes our design and interactive elements so the site loads instantly for you.
+
+---
+
+### 2. Technical In-Depth (For Developers)
+
+**Architectural Pattern: MVC (Model-View-Controller)**
+The platform strictly adheres to the MVC architectural paradigm, naturally enforced by the Laravel ecosystem:
+- **Models (Eloquent ORM)**: Located in `app/Models/` (e.g., `User`, `Trip`, `Vehicle`, `EcoTip`, `Achievement`). They handle abstracting database interactions, casting attributes, and defining complex relationships (e.g., a User `hasMany` Trips).
+- **Views (Blade)**: Stored in `resources/views/`. Uses Blade's powerful templating engine, heavily relying on component-based architecture for reusable UI elements.
+- **Controllers**: Located in `app/Http/Controllers/`. They act as orchestrators—validating incoming requests (frequently via Form Requests in `app/Http/Requests/`), interacting with models, and determining the appropriate outgoing HTTP response.
+
+**Frontend & Asset Pipeline**
+- **Tailwind CSS & PostCSS**: A utility-first CSS framework configured via `tailwind.config.js` and `postcss.config.js`. Helps maintain a lean, highly customizable production stylesheet.
+- **Vite**: Defined in `vite.config.js`, this modern frontend build tool provides near-instant Hot Module Replacement (HMR) during development and highly optimized asset bundling for production environments.
+- **Authentication Scaffold**: Implemented using **Laravel Breeze**, which provides a secure, minimal, and fully functional implementation of authentication features (login, registration, password resets, and email verification) out-of-the-box.
+
+**Database & Data Management**
+- **Migrations**: Database schema version control is strictly managed through numbered migration scripts (`database/migrations/`).
+- **Seeders & Factories**: `database/seeders/DatabaseSeeder.php` combined with Model Factories (e.g., `TripFactory`, `UserFactory` using `FakerPHP`) populate diverse testing data environments systematically.
+- **Relational Integrity**: Built on scalable RDBMS (MySQL/PostgreSQL) employing proper foreign key constraints, indexing, and cascading rules.
+
+**Quality Assurance & Workflow**
+- **Automated Testing**: Powered by **PHPUnit** (configured via `phpunit.xml`), utilizing extensive Feature and Unit testing structures under the `tests/` directory to prevent regressions.
+- **Dependency Management**: Uses **Composer** (`composer.json`) for backend PHP package management and **NPM** (`package.json`) for frontend tools.
 
 ## Project Structure
 
