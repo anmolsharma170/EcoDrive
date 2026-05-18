@@ -12,7 +12,7 @@ The Carbon Footprint Tracker is an environmental awareness application built wit
 - User registration and email verification
 - Secure login/logout functionality
 - User profile management with account settings
-- Password reset functionality
+- Password reset functionality ......jnknjkn
 - Role-based access control (User/Admin)
 
 ### 📊 Dashboard
